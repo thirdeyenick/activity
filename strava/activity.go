@@ -61,7 +61,7 @@ func (p *channelPaginator) Do(ctx context.Context, spec activity.Pagination) (in
 
 // Streams returns the activity's data streams
 func (s *ActivityService) Streams(ctx context.Context, activityID int64, streams ...string) (*Streams, error) {
-	if err := validateStreams(streams); err != nil {
+	if err := s.validateStreams(streams); err != nil {
 		return nil, err
 	}
 	keys := strings.Join(streams, ",")
@@ -83,7 +83,7 @@ func (s *ActivityService) Streams(ctx context.Context, activityID int64, streams
 func (s *ActivityService) Activity(ctx context.Context, activityID int64, streams ...string) (*Activity, error) {
 	if len(streams) > 0 {
 		// confirm valid streams before querying strava for the activity
-		if err := validateStreams(streams); err != nil {
+		if err := s.validateStreams(streams); err != nil {
 			return nil, err
 		}
 	}
@@ -92,8 +92,8 @@ func (s *ActivityService) Activity(ctx context.Context, activityID int64, stream
 	if err != nil {
 		return nil, err
 	}
-	var act *Activity
 	var sms *Streams
+	var act *Activity
 	grp, ctx := errgroup.WithContext(ctx)
 	grp.Go(func() error {
 		act = &Activity{}
@@ -105,8 +105,7 @@ func (s *ActivityService) Activity(ctx context.Context, activityID int64, stream
 			return err
 		})
 	}
-	err = grp.Wait()
-	if err != nil {
+	if err := grp.Wait(); err != nil {
 		return nil, err
 	}
 	act.Streams = sms
@@ -123,7 +122,6 @@ func (s *ActivityService) Activities(ctx context.Context, spec activity.Paginati
 		p := &channelPaginator{service: *s, activities: acts}
 		err := activity.Paginate(ctx, p, spec)
 		if err != nil {
-			// log.Error().Err(err).Msg("paginating activities")
 			select {
 			case <-ctx.Done():
 				return
@@ -233,7 +231,7 @@ func (s *ActivityService) StreamSets() map[string]string {
 	return q
 }
 
-func validateStreams(streams []string) error {
+func (s *ActivityService) validateStreams(streams []string) error {
 	for i := range streams {
 		_, ok := streamsets[streams[i]]
 		if !ok {

@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_Athlete(t *testing.T) {
+func TestAthlete(t *testing.T) {
 	t.Parallel()
 	a := assert.New(t)
 
@@ -25,7 +25,7 @@ func Test_Athlete(t *testing.T) {
 	a.Equal(1, len(ath.Shoes))
 }
 
-func Test_AthleteNotAuthorized(t *testing.T) {
+func TestAthleteNotAuthorized(t *testing.T) {
 	t.Parallel()
 	a := assert.New(t)
 	client, err := newClient(http.StatusUnauthorized, "athlete_unauthorized.json")
@@ -36,7 +36,7 @@ func Test_AthleteNotAuthorized(t *testing.T) {
 	a.Nil(ath)
 }
 
-func Test_AthleteStats(t *testing.T) {
+func TestAthleteStats(t *testing.T) {
 	t.Parallel()
 	a := assert.New(t)
 

@@ -150,10 +150,6 @@ type Ride struct {
 	UTCDatetime   Datetime `json:"utc_datetime"`
 }
 
-func (r *Ride) Named() *activity.Named {
-	return &activity.Named{ID: r.ID, Name: r.Title, Date: r.LocalDatetime.Time, Source: "cyclinganalytics"}
-}
-
 type Upload struct {
 	ID        int64    `json:"upload_id"`
 	Status    string   `json:"status"`

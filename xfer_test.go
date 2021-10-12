@@ -2,7 +2,9 @@ package activity_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -85,4 +87,33 @@ func TestPoller(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestFormat(t *testing.T) {
+	t.Parallel()
+	a := assert.New(t)
+	a.Equal("fit", activity.FormatFIT.String())
+
+	a.Equal(activity.FormatFIT, activity.ToFormat("fit"))
+	a.Equal(activity.FormatTCX, activity.ToFormat("tcx"))
+	a.Equal(activity.FormatGPX, activity.ToFormat("gpx"))
+	a.Equal(activity.FormatOriginal, activity.ToFormat(""))
+
+	v, err := json.Marshal(activity.FormatFIT)
+	a.NoError(err)
+	a.JSONEq(`"fit"`, string(v))
+}
+
+func TestFile(t *testing.T) {
+	t.Parallel()
+	a := assert.New(t)
+
+	r := strings.NewReader("foo")
+	f := activity.File{
+		Reader: r,
+	}
+	a.NoError(f.Close())
+
+	f = activity.File{}
+	a.NoError(f.Close())
 }

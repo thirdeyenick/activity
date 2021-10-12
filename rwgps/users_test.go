@@ -10,7 +10,7 @@ import (
 	"github.com/bzimmer/activity/rwgps"
 )
 
-func Test_User(t *testing.T) {
+func TestUser(t *testing.T) {
 	t.Parallel()
 	a := assert.New(t)
 

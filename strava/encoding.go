@@ -2,7 +2,7 @@ package strava
 
 import (
 	"errors"
-	"strconv"
+	"fmt"
 	"time"
 
 	"github.com/twpayne/go-geom"
@@ -13,7 +13,6 @@ import (
 )
 
 var _ activity.GPXer = (*Route)(nil)
-var _ activity.GPXer = (*Streams)(nil)
 var _ activity.GPXer = (*Activity)(nil)
 
 func polylineToLineString(polylines ...string) (*geom.LineString, error) {
@@ -43,120 +42,88 @@ func polylineToLineString(polylines ...string) (*geom.LineString, error) {
 }
 
 // GPX representation of an activity
-func (a *Activity) GPX() (x *gpx.GPX, err error) {
-	// minimally require the lat/lng
-	if a.Streams != nil && a.Streams.LatLng != nil {
-		x, err = toGPXFromStreams(a.Streams, a.StartDate)
+func (a *Activity) GPX() (*gpx.GPX, error) {
+	if a.Streams == nil {
+		ls, err := a.Map.LineString()
 		if err != nil {
-			return
-		}
-	} else {
-		var ls *geom.LineString
-		ls, err = polylineToLineString(a.Map.Polyline, a.Map.SummaryPolyline)
-		if err != nil {
-			return
+			return nil, err
 		}
 		mls := geom.NewMultiLineString(ls.Layout())
 		err = mls.Push(ls)
 		if err != nil {
-			return
+			return nil, err
 		}
 		trk := gpx.NewTrkType(mls)
-		trk.Src = baseURL
-		x = &gpx.GPX{
+		trk.Name = a.Name
+		trk.Desc = a.Description
+		trk.Link = []*gpx.LinkType{
+			{
+				HREF: fmt.Sprintf("https://strava.com/activities/%d", a.ID),
+			},
+		}
+		x := &gpx.GPX{
 			Trk: []*gpx.TrkType{trk},
 		}
+		return x, nil
 	}
-	x.Metadata = &gpx.MetadataType{
-		Name: strconv.FormatInt(a.ID, 10),
-		Desc: a.Description,
-		Time: a.StartDate,
-	}
-	return
+	return a.toGPXFromStreams()
 }
 
-// GPX representation of an route
+// GPX representation of a route
 func (r *Route) GPX() (*gpx.GPX, error) {
-	ls, err := polylineToLineString(r.Map.Polyline, r.Map.SummaryPolyline)
+	ls, err := r.Map.LineString()
 	if err != nil {
 		return nil, err
 	}
 	rte := gpx.NewRteType(ls)
-	rte.Src = baseURL
-	return &gpx.GPX{
-		Creator: activity.UserAgent,
-		Metadata: &gpx.MetadataType{
-			Name: strconv.FormatInt(r.ID, 10),
-			Desc: r.Description,
+	rte.Name = r.Name
+	rte.Desc = r.Description
+	rte.Link = []*gpx.LinkType{
+		{
+			HREF: fmt.Sprintf("https://strava.com/routes/%d", r.ID),
 		},
+	}
+	x := &gpx.GPX{
 		Rte: []*gpx.RteType{rte},
-	}, nil
+	}
+	return x, nil
 }
 
-// GPX representation of a streams
-func (s *Streams) GPX() (*gpx.GPX, error) {
-	return toGPXFromStreams(s, time.Time{})
-}
-
-func toGPXFromStreams(s *Streams, start time.Time) (*gpx.GPX, error) {
-	if s.LatLng == nil || len(s.LatLng.Data) == 0 {
-		return nil, errors.New("missing latlng data")
+func (a *Activity) toGPXFromStreams() (*gpx.GPX, error) {
+	if a.Streams == nil {
+		return nil, errors.New("no streams available for gpx encoding")
 	}
-
-	var layout geom.Layout
-	switch {
-	case s.Elevation != nil && s.Time != nil:
-		layout = geom.XYZM
-	case s.Elevation != nil:
-		layout = geom.XYZ
-	case s.Time != nil:
-		layout = geom.XYM
-	default:
-		layout = geom.XY
+	if a.Streams.LatLng == nil || a.Streams.Time == nil {
+		return nil, errors.New("both latlng and time streams are required for gpx encoding")
 	}
-
-	var toUTC = func(m float64) float64 {
-		x := time.Second * time.Duration(m)
-		y := start.Add(x)
-		return float64(y.Unix())
-	}
-
-	n := len(s.LatLng.Data)
-	dim := layout.Stride()
-	coords := make([]float64, dim*n)
-	for i := 0; i < n; i++ {
-		x := dim * i
-		latlng := s.LatLng.Data[i]
-		coords[x+0] = latlng[1]
-		coords[x+1] = latlng[0]
-		switch layout {
-		case geom.XYZM:
-			coords[x+2] = s.Elevation.Data[i].Meters()
-			coords[x+3] = toUTC(s.Time.Data[i])
-		case geom.XYZ:
-			coords[x+2] = s.Elevation.Data[i].Meters()
-		case geom.XYM:
-			coords[x+2] = s.Time.Data[i]
-		case geom.NoLayout, geom.XY:
-			// pass
+	points := make([]*gpx.WptType, len(a.Streams.Time.Data))
+	for i := range a.Streams.Time.Data {
+		points[i] = &gpx.WptType{
+			Lat:  a.Streams.LatLng.Data[i][0],
+			Lon:  a.Streams.LatLng.Data[i][1],
+			Time: a.StartDate.Add(time.Duration(a.Streams.Time.Data[i]) * time.Second),
+		}
+		if a.Streams.Elevation != nil {
+			points[i].Ele = a.Streams.Elevation.Data[i].Meters()
 		}
 	}
-
-	ls := geom.NewLineStringFlat(layout, coords)
-	mls := geom.NewMultiLineString(ls.Layout())
-	err := mls.Push(ls)
-	if err != nil {
-		return nil, err
-	}
-
-	trk := gpx.NewTrkType(mls)
-	trk.Src = baseURL
-
-	return &gpx.GPX{
-		Creator: activity.UserAgent,
-		Metadata: &gpx.MetadataType{
-			Name: strconv.FormatInt(s.ActivityID, 10),
+	x := &gpx.GPX{
+		Trk: []*gpx.TrkType{
+			{
+				Name: a.Name,
+				Desc: a.Description,
+				Link: []*gpx.LinkType{
+					{
+						HREF: fmt.Sprintf("https://strava.com/activities/%d", a.ID),
+					},
+				},
+				TrkSeg: []*gpx.TrkSegType{
+					{
+						TrkPt: points,
+					},
+				},
+			},
 		},
-		Trk: []*gpx.TrkType{trk},
-	}, nil
+	}
+	return x, nil
 }

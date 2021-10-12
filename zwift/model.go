@@ -2,8 +2,6 @@ package zwift
 
 import (
 	"time"
-
-	"github.com/bzimmer/activity"
 )
 
 // dateTimeFormat used by cyclinganalytics
@@ -167,8 +165,4 @@ type Activity struct {
 	MovingTimeInMillis   int      `json:"movingTimeInMs"`
 	Privacy              string   `json:"privacy"`
 	// SnapshotList         interface{} `json:"snapshotList"`
-}
-
-func (a *Activity) Named() *activity.Named {
-	return &activity.Named{ID: a.ID, Name: a.Name, Date: a.StartDate.Time, Source: "zwift"}
 }
