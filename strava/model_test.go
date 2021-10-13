@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_Fault(t *testing.T) {
+func TestFault(t *testing.T) {
 	t.Parallel()
 	a := assert.New(t)
 

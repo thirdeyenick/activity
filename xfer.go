@@ -92,7 +92,7 @@ const (
 )
 
 // MarshalJSON converts a Format enum to a string representation
-func (f *Format) MarshalJSON() ([]byte, error) {
+func (f Format) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf(`"%s"`, f.String())), nil
 }
 
@@ -161,15 +161,7 @@ func (p *poller) Poll(ctx context.Context, uploadID UploadID) <-chan *Poll {
 	res := make(chan *Poll)
 	go func() {
 		defer close(res)
-		i := 0
-		for {
-			if i == p.iterations {
-				select {
-				case <-ctx.Done():
-					return
-				case res <- &Poll{Err: ErrExceededIterations}:
-				}
-			}
+		for i := p.iterations; i > 0; i-- {
 			upload, err := p.uploader.Status(ctx, uploadID)
 			poll := &Poll{Upload: upload, Err: err}
 			select {
@@ -186,7 +178,11 @@ func (p *poller) Poll(ctx context.Context, uploadID UploadID) <-chan *Poll {
 				return
 			case <-time.After(p.interval):
 			}
-			i++
+		}
+		select {
+		case <-ctx.Done():
+			return
+		case res <- &Poll{Err: ErrExceededIterations}:
 		}
 	}()
 	return res

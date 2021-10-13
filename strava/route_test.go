@@ -12,7 +12,7 @@ import (
 	"github.com/bzimmer/activity/strava"
 )
 
-func Test_Route(t *testing.T) {
+func TestRoute(t *testing.T) {
 	t.Parallel()
 	a := assert.New(t)
 	client, err := newClient(http.StatusOK, "route.json")
@@ -24,7 +24,7 @@ func Test_Route(t *testing.T) {
 	a.Equal(int64(26587226), rte.ID)
 }
 
-func Test_Routes(t *testing.T) {
+func TestRoutes(t *testing.T) {
 	t.Parallel()
 	a := assert.New(t)
 
@@ -45,11 +45,10 @@ func Test_Routes(t *testing.T) {
 
 	// test total and start
 	// success: the requested number of routes is exceeded because count/pagesize not specified
-	x := 234
-	acts, err = client.Route.Routes(ctx, 26587226, activity.Pagination{Total: x, Start: 0})
+	acts, err = client.Route.Routes(ctx, 26587226, activity.Pagination{Total: 234, Start: 0})
 	a.NoError(err)
 	a.NotNil(acts)
-	a.Equal(x, len(acts))
+	a.Equal(234, len(acts))
 
 	// test total and start less than PageSize
 	// success: the requested number of routes because count/pagesize <= strava.PageSize

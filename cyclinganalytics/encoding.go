@@ -32,7 +32,7 @@ func (r *Ride) GPX() (*gpx.GPX, error) {
 	coords := make([]float64, dim*n)
 	for i := 0; i < n; i++ {
 		x := dim * i
-		t := float64(r.LocalDatetime.Time.Add(time.Second * time.Duration(i)).Unix())
+		t := float64(r.UTCDatetime.Time.Add(time.Second * time.Duration(i)).Unix())
 
 		coords[x+0] = s.Longitude[i]
 		coords[x+1] = s.Latitude[i]

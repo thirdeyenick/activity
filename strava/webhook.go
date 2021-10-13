@@ -154,7 +154,6 @@ func (h *webhookHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		webhookEventHandler(h.sub)(w, r)
 	default:
-		// log.Error().Str("method", r.Method).Msg("unhandled http method")
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }

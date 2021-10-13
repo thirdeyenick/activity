@@ -120,10 +120,6 @@ type Trip struct {
 	Metrics       *Metrics      `json:"metrics,omitempty"`
 }
 
-func (t *Trip) Named() *activity.Named {
-	return &activity.Named{ID: t.ID, Name: t.Name, Date: t.DepartedAt, Source: "rwgps"}
-}
-
 type Task struct {
 	ID        int    `json:"id"`
 	Message   string `json:"message"`

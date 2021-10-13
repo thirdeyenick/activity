@@ -54,33 +54,19 @@ func Paginate(ctx context.Context, paginator Paginator, spec Pagination) error {
 }
 
 func do(ctx context.Context, paginator Paginator, spec Pagination) error {
-	// log.Info().
-	// 	Int("n", 0).
-	// 	Int("all", 0).
-	// 	Int("start", 0).
-	// 	Int("count", spec.Count).
-	// 	Int("total", spec.Total).
-	// 	Msg("do")
 	for {
 		n, err := paginator.Do(ctx, spec)
 		if err != nil {
 			return err
 		}
-		all := paginator.Count()
-		// @warning(bzimmer)
-		// the `spec.Count` value must be consistent throughout the entire pagination
-		// log.Info().
-		// 	Int("n", n).
-		// 	Int("all", all).
-		// 	Int("start", spec.Start).
-		// 	Int("count", spec.Count).
-		// 	Int("total", spec.Total).
-		// 	Msg("do")
-		// fewer than requested results is a possible scenario so break only if
-		//  0 results were returned or we have enough to fulfill the request
 		if n == 0 {
+			// fewer than requested results is a possible scenario so break only if
+			//  0 results were returned or we have enough to fulfill the request
 			break
 		}
+		// @warning(bzimmer)
+		// the `spec.Count` value must be consistent throughout the entire pagination
+		all := paginator.Count()
 		if spec.Total > 0 && all >= spec.Total {
 			break
 		}

@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 
@@ -18,7 +17,7 @@ import (
 )
 
 const (
-	baseURL = "https://www.strava.com/api/v3"
+	_baseURL = "https://www.strava.com/api/v3"
 	// PageSize default for querying bulk entities (eg activities, routes)
 	PageSize = 100
 )
@@ -32,9 +31,10 @@ var Endpoint = oauth2.Endpoint{
 
 // Client for communicating with Strava
 type Client struct {
-	config oauth2.Config
-	token  *oauth2.Token
-	client *http.Client
+	client  *http.Client
+	token   *oauth2.Token
+	config  oauth2.Config
+	baseURL string
 
 	Auth     *AuthService
 	Route    *RouteService
@@ -43,8 +43,17 @@ type Client struct {
 	Activity *ActivityService
 }
 
+// Uploader returns an Uploader for this client
 func (c *Client) Uploader() activity.Uploader {
 	return newUploader(c.Activity)
+}
+
+// WithBaseURL specifies the base url
+func WithBaseURL(baseURL string) Option {
+	return func(c *Client) error {
+		c.baseURL = baseURL
+		return nil
+	}
 }
 
 func withServices() Option {
@@ -54,6 +63,9 @@ func withServices() Option {
 		c.Webhook = &WebhookService{client: c}
 		c.Athlete = &AthleteService{client: c}
 		c.Activity = &ActivityService{client: c}
+		if c.baseURL == "" {
+			c.baseURL = _baseURL
+		}
 		return nil
 	}
 }
@@ -62,7 +74,7 @@ func (c *Client) newAPIRequest(ctx context.Context, method, uri string, body io.
 	if c.token.AccessToken == "" {
 		return nil, errors.New("accessToken required")
 	}
-	u, err := url.Parse(fmt.Sprintf("%s/%s", baseURL, uri))
+	u, err := url.Parse(fmt.Sprintf("%s/%s", c.baseURL, uri))
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +88,7 @@ func (c *Client) newAPIRequest(ctx context.Context, method, uri string, body io.
 }
 
 func (c *Client) newWebhookRequest(ctx context.Context, method, uri string, body map[string]string) (*http.Request, error) {
-	u, err := url.Parse(fmt.Sprintf("%s/%s", baseURL, uri))
+	u, err := url.Parse(fmt.Sprintf("%s/%s", c.baseURL, uri))
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +100,7 @@ func (c *Client) newWebhookRequest(ctx context.Context, method, uri string, body
 		for key, value := range body {
 			form.Set(key, value)
 		}
-		buf = ioutil.NopCloser(bytes.NewBufferString(form.Encode()))
+		buf = io.NopCloser(bytes.NewBufferString(form.Encode()))
 	}
 	req, err := http.NewRequestWithContext(ctx, method, u.String(), buf)
 	if err != nil {

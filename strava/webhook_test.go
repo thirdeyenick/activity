@@ -13,7 +13,7 @@ import (
 	"github.com/bzimmer/activity/strava"
 )
 
-func Test_WebhookSubscribe(t *testing.T) {
+func TestWebhookSubscribe(t *testing.T) {
 	t.Parallel()
 	a := assert.New(t)
 	client, err := newClienter(
@@ -38,7 +38,7 @@ func Test_WebhookSubscribe(t *testing.T) {
 	a.Equal(int64(887228), msg.ID)
 }
 
-func Test_WebhookUnsubscribe(t *testing.T) {
+func TestWebhookUnsubscribe(t *testing.T) {
 	t.Parallel()
 	a := assert.New(t)
 	client, err := newClient(http.StatusNoContent, "")
@@ -48,7 +48,7 @@ func Test_WebhookUnsubscribe(t *testing.T) {
 	a.NoError(err)
 }
 
-func Test_WebhookList(t *testing.T) {
+func TestWebhookList(t *testing.T) {
 	t.Parallel()
 	a := assert.New(t)
 	client, err := newClient(http.StatusOK, "subscriptions.json")
@@ -91,7 +91,7 @@ func setupTestRouter() (*TestSubscriber, *http.ServeMux) {
 	return sub, mux
 }
 
-func Test_WebhookEventHandler(t *testing.T) {
+func TestWebhookEventHandler(t *testing.T) {
 	t.Parallel()
 	a := assert.New(t)
 	sub, router := setupTestRouter()
@@ -143,7 +143,7 @@ func Test_WebhookEventHandler(t *testing.T) {
 	a.Equal(500, w.Code)
 }
 
-func Test_WebhookSubscriptionHandler(t *testing.T) {
+func TestWebhookSubscriptionHandler(t *testing.T) {
 	t.Parallel()
 	a := assert.New(t)
 	sub, router := setupTestRouter()

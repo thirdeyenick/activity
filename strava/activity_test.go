@@ -3,8 +3,9 @@ package strava_test
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -62,7 +63,7 @@ func (f *F) X(res *http.Response) error {
 	if f.n == 1 {
 		// on the second iteration return an empty body signaling no more activities exist
 		res.ContentLength = int64(0)
-		res.Body = ioutil.NopCloser(bytes.NewBuffer([]byte{}))
+		res.Body = io.NopCloser(bytes.NewBuffer([]byte{}))
 	}
 	f.n++
 	return nil
@@ -135,7 +136,7 @@ func TestActivitiesMany(t *testing.T) {
 	})
 }
 
-func TestStreams(t *testing.T) {
+func TestActivityStreams(t *testing.T) {
 	t.Parallel()
 	a := assert.New(t)
 
@@ -161,9 +162,19 @@ func TestStreams(t *testing.T) {
 		a.NotNil(sms.LatLng)
 		a.NotNil(sms.Elevation)
 	})
+
+	t.Run("invalid stream", func(t *testing.T) {
+		ctx := context.Background()
+		client, err := newClient(http.StatusOK, "streams_two.json")
+		a.NoError(err)
+		sms, err := client.Activity.Streams(ctx, 154504250376, "foo", "bar")
+		a.Error(err)
+		a.Nil(sms)
+		a.Contains(err.Error(), "invalid stream")
+	})
 }
 
-func TestTimeout(t *testing.T) {
+func TestActivityTimeout(t *testing.T) {
 	t.Parallel()
 	a := assert.New(t)
 
@@ -197,4 +208,58 @@ func TestTimeout(t *testing.T) {
 		a.NotNil(act)
 		a.Equal(int64(154504250376823), act.ID)
 	})
+}
+
+func TestStreamSets(t *testing.T) {
+	t.Parallel()
+	a := assert.New(t)
+
+	svr := httptest.NewServer(http.NewServeMux())
+	defer svr.Close()
+
+	client, err := newTestClient(strava.WithBaseURL(svr.URL))
+	a.NoError(err)
+
+	s := client.Activity.StreamSets()
+	a.NotNil(s)
+	a.Equal(11, len(s))
+}
+
+func TestPhotos(t *testing.T) {
+	t.Parallel()
+	a := assert.New(t)
+
+	newMux := func() *http.ServeMux {
+		mux := http.NewServeMux()
+		mux.HandleFunc("/activities/6099369285/photos", func(w http.ResponseWriter, r *http.Request) {
+			a.NoError(copyFile(w, "testdata/photos.json"))
+		})
+		return mux
+	}
+
+	tests := []struct {
+		id   int64
+		name string
+	}{
+		{
+			id:   6099369285,
+			name: "query photos",
+		},
+	}
+
+	for i := range tests {
+		tt := tests[i]
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			svr := httptest.NewServer(newMux())
+			defer svr.Close()
+
+			client, err := newTestClient(strava.WithBaseURL(svr.URL))
+			a.NoError(err)
+			photos, err := client.Activity.Photos(context.Background(), tt.id, 2048)
+			a.NoError(err)
+			a.NotNil(photos)
+		})
+	}
 }

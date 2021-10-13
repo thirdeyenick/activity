@@ -420,10 +420,6 @@ type Activity struct {
 	Streams                  *Streams               `json:"streams,omitempty"`
 }
 
-func (a *Activity) Named() *activity.Named {
-	return &activity.Named{ID: a.ID, Name: a.Name, Date: a.StartDateLocal}
-}
-
 // Route is a planned activity
 type Route struct {
 	Private             bool          `json:"private"`
@@ -443,10 +439,6 @@ type Route struct {
 	ID                  int64         `json:"id"`
 	Map                 *Map          `json:"map"`
 	Timestamp           int           `json:"timestamp"`
-}
-
-func (r *Route) Named() *activity.Named {
-	return &activity.Named{ID: r.ID, Name: r.Name, Date: r.CreatedAt, Source: "strava"}
 }
 
 type TrainingDate struct {
