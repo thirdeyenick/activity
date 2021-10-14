@@ -10,7 +10,7 @@ import (
 	"github.com/bzimmer/activity/rwgps"
 )
 
-func TestGPXFromTrip(t *testing.T) {
+func TestEncodingFromTrip(t *testing.T) {
 	t.Parallel()
 	a := assert.New(t)
 
@@ -30,4 +30,9 @@ func TestGPXFromTrip(t *testing.T) {
 	a.NoError(err)
 	a.NotNil(gpx)
 	a.Equal(1465, len(gpx.Trk[0].TrkSeg[0].TrkPt))
+
+	gj, err := trip.GeoJSON()
+	a.NoError(err)
+	a.NotNil(gj)
+	a.Equal(1465*3, len(gj.Geometry.FlatCoords()))
 }

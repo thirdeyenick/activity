@@ -3,6 +3,7 @@ package strava_test
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -260,6 +261,107 @@ func TestPhotos(t *testing.T) {
 			photos, err := client.Activity.Photos(context.Background(), tt.id, 2048)
 			a.NoError(err)
 			a.NotNil(photos)
+		})
+	}
+}
+
+func TestUpload(t *testing.T) {
+	t.Parallel()
+	a := assert.New(t)
+
+	newMux := func() *http.ServeMux {
+		up := &strava.Upload{
+			ID:         12345,
+			IDString:   "12345",
+			ExternalID: "",
+			Error:      "",
+			Status:     "ok",
+			ActivityID: 54321,
+		}
+		mux := http.NewServeMux()
+		mux.HandleFunc("/uploads", func(w http.ResponseWriter, r *http.Request) {
+			enc := json.NewEncoder(w)
+			a.NoError(enc.Encode(up))
+		})
+		mux.HandleFunc("/uploads/12345", func(w http.ResponseWriter, r *http.Request) {
+			enc := json.NewEncoder(w)
+			a.NoError(enc.Encode(up))
+		})
+		return mux
+	}
+
+	tests := []struct {
+		name string
+		err  bool
+		done bool
+		file *activity.File
+	}{
+		{
+			name: "nil file",
+			err:  true,
+			file: nil,
+		},
+		{
+			name: "valid file",
+			err:  false,
+			done: true,
+			file: &activity.File{
+				Name:     "LongHike.gpx",
+				Filename: "/tmp/LongHike.gpx",
+				Format:   activity.FormatGPX,
+				Reader: bytes.NewBufferString(`<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1" xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1" creator="Oregon 400t" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd">
+	<metadata>
+	<link href="http://www.garmin.com">
+		<text>Garmin International</text>
+	</link>
+	<time>2009-10-17T22:58:43Z</time>
+	</metadata>
+	<trk>
+	<name>Example GPX Document</name>
+	<trkseg>
+		<trkpt lat="47.644548" lon="-122.326897">
+		<ele>4.46</ele>
+		<time>2009-10-17T18:37:26Z</time>
+		</trkpt>
+		<trkpt lat="47.644548" lon="-122.326897">
+		<ele>4.94</ele>
+		<time>2009-10-17T18:37:31Z</time>
+		</trkpt>
+		<trkpt lat="47.644548" lon="-122.326897">
+		<ele>6.87</ele>
+		<time>2009-10-17T18:37:34Z</time>
+		</trkpt>
+	</trkseg>
+	</trk>
+</gpx>`),
+			},
+		},
+	}
+
+	for i := range tests {
+		tt := tests[i]
+		t.Run(tt.name, func(t *testing.T) {
+			svr := httptest.NewServer(newMux())
+			defer svr.Close()
+			client, err := newTestClient(strava.WithBaseURL(svr.URL))
+			a.NoError(err)
+
+			uploader := client.Uploader()
+			upload, err := uploader.Upload(context.Background(), tt.file)
+			if tt.err {
+				a.Error(err)
+				a.Nil(upload)
+				return
+			}
+			a.NoError(err)
+			a.NotNil(upload)
+			a.Equal(tt.done, upload.Done())
+
+			upload, err = uploader.Status(context.Background(), upload.Identifier())
+			a.NoError(err)
+			a.NotNil(upload)
+			a.Equal(tt.done, upload.Done())
 		})
 	}
 }
