@@ -153,7 +153,7 @@ func (s *TripsService) Upload(ctx context.Context, file *activity.File) (*Upload
 		return nil, err
 	}
 
-	uri := fmt.Sprintf("%s/trips.json", baseURL)
+	uri := fmt.Sprintf("%s/trips.json", s.client.baseURL)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, uri, &b)
 	if err != nil {
 		return nil, err

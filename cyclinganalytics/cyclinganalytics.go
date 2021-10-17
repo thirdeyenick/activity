@@ -14,13 +14,14 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const baseURL = "https://www.cyclinganalytics.com/api"
+const _baseURL = "https://www.cyclinganalytics.com/api"
 
 // Client for accessing Cycling Analytics' API
 type Client struct {
-	config oauth2.Config
-	token  *oauth2.Token
-	client *http.Client
+	config  oauth2.Config
+	token   *oauth2.Token
+	client  *http.Client
+	baseURL string
 
 	User  *UserService
 	Rides *RidesService
@@ -39,6 +40,17 @@ func withServices() Option {
 	return func(c *Client) error {
 		c.User = &UserService{client: c}
 		c.Rides = &RidesService{client: c}
+		if c.baseURL == "" {
+			c.baseURL = _baseURL
+		}
+		return nil
+	}
+}
+
+// WithBaseURL specifies the base url
+func WithBaseURL(baseURL string) Option {
+	return func(c *Client) error {
+		c.baseURL = baseURL
 		return nil
 	}
 }
@@ -47,7 +59,7 @@ func (c *Client) newAPIRequest(ctx context.Context, method, uri string, values *
 	if c.token.AccessToken == "" {
 		return nil, errors.New("accessToken required")
 	}
-	q := fmt.Sprintf("%s/%s", baseURL, uri)
+	q := fmt.Sprintf("%s/%s", c.baseURL, uri)
 	if values != nil {
 		q = fmt.Sprintf("%s?%s", q, values.Encode())
 	}

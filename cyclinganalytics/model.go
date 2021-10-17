@@ -8,6 +8,7 @@ import (
 
 // Fault represents an error response
 type Fault struct {
+	Code    int    `json:"code"`
 	Message string `json:"error"`
 }
 

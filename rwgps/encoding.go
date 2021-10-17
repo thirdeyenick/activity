@@ -30,7 +30,7 @@ func (t *Trip) GeoJSON() (*geojson.Feature, error) {
 		Properties: map[string]interface{}{
 			"type":   t.Type,
 			"name":   t.Name,
-			"source": baseURL,
+			"source": _baseURL,
 		},
 	}
 	return g, nil

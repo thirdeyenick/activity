@@ -22,9 +22,9 @@ func (s *ProfileService) Profile(ctx context.Context, profileID string) (*Profil
 	if err != nil {
 		return nil, err
 	}
-	var profile *Profile
+	var profile Profile
 	if err = s.client.do(req, &profile); err != nil {
 		return nil, err
 	}
-	return profile, err
+	return &profile, err
 }

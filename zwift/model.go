@@ -9,6 +9,7 @@ const datetimeFormat = `"2006-01-02T15:04:05+0000"`
 
 // Fault represents a Zwift error
 type Fault struct {
+	Code    int    `json:"code"`
 	Message string `json:"message"`
 }
 
