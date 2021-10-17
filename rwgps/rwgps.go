@@ -17,14 +17,15 @@ import (
 
 const (
 	apiVersion = "2"
-	baseURL    = "https://ridewithgps.com"
+	_baseURL   = "https://ridewithgps.com"
 )
 
 // Client for communicating with RWGPS
 type Client struct {
-	config oauth2.Config
-	token  *oauth2.Token
-	client *http.Client
+	config  oauth2.Config
+	token   *oauth2.Token
+	client  *http.Client
+	baseURL string
 
 	Users *UsersService
 	Trips *TripsService
@@ -38,12 +39,23 @@ func withServices() Option {
 	return func(c *Client) error {
 		c.Users = &UsersService{client: c}
 		c.Trips = &TripsService{client: c}
+		if c.baseURL == "" {
+			c.baseURL = _baseURL
+		}
+		return nil
+	}
+}
+
+// WithBaseURL specifies the base url
+func WithBaseURL(baseURL string) Option {
+	return func(c *Client) error {
+		c.baseURL = baseURL
 		return nil
 	}
 }
 
 func (c *Client) newAPIRequest(ctx context.Context, uri string, params map[string]string) (*http.Request, error) {
-	u, err := url.Parse(fmt.Sprintf("%s/%s", baseURL, uri))
+	u, err := url.Parse(fmt.Sprintf("%s/%s", c.baseURL, uri))
 	if err != nil {
 		return nil, err
 	}

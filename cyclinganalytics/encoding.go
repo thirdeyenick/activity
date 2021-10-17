@@ -55,7 +55,7 @@ func (r *Ride) GPX() (*gpx.GPX, error) {
 	}
 
 	trk := gpx.NewTrkType(mls)
-	trk.Src = baseURL
+	trk.Src = _baseURL
 
 	return &gpx.GPX{
 		Creator: activity.UserAgent,

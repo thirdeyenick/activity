@@ -13,7 +13,7 @@ import (
 
 //go:generate genwith --do --client --token --ratelimit --package zwift
 
-const baseURL = "https://us-or-rly101.zwift.com"
+const _baseURL = "https://us-or-rly101.zwift.com"
 const userAgent = "CNL/3.4.1 (Darwin Kernel 20.3.0) zwift/1.0.61590 curl/7.64.1"
 
 // Endpoint is Zwifts's OAuth 2.0 endpoint
@@ -26,8 +26,9 @@ func Endpoint() oauth2.Endpoint {
 
 // Client for communicating with Zwift
 type Client struct {
-	token  *oauth2.Token
-	client *http.Client
+	token   *oauth2.Token
+	client  *http.Client
+	baseURL string
 
 	Auth     *AuthService
 	Activity *ActivityService
@@ -44,6 +45,17 @@ func withServices() Option {
 		c.Profile = &ProfileService{c}
 		c.Activity = &ActivityService{c}
 		c.token.TokenType = "bearer"
+		if c.baseURL == "" {
+			c.baseURL = _baseURL
+		}
+		return nil
+	}
+}
+
+// WithBaseURL specifies the base url
+func WithBaseURL(baseURL string) Option {
+	return func(c *Client) error {
+		c.baseURL = baseURL
 		return nil
 	}
 }
@@ -52,7 +64,7 @@ func (c *Client) newAPIRequest(ctx context.Context, method, uri string) (*http.R
 	if c.token.AccessToken == "" {
 		return nil, errors.New("accessToken required")
 	}
-	q := fmt.Sprintf("%s/%s", baseURL, uri)
+	q := fmt.Sprintf("%s/%s", c.baseURL, uri)
 	u, err := url.Parse(q)
 	if err != nil {
 		return nil, err

@@ -28,6 +28,7 @@ const (
 
 // Fault is an error
 type Fault struct {
+	Code    int    `json:"code"`
 	Message string `json:"message"`
 }
 
