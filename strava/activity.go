@@ -159,7 +159,7 @@ func (s *ActivityService) Activities(ctx context.Context, spec activity.Paginati
 }
 
 // ActivitiesIter executes the iter function over the results of the channel
-func (s *ActivityService) ActivitiesIter(res <-chan *ActivityResult, iter ActivityIterFunc) error {
+func ActivitiesIter(res <-chan *ActivityResult, iter ActivityIterFunc) error {
 	for ar := range res {
 		if ar.Err != nil {
 			return ar.Err

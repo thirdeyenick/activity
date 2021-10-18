@@ -21,7 +21,7 @@ import (
 
 func readall(ctx context.Context, client *strava.Client, spec activity.Pagination, opts ...strava.APIOption) ([]*strava.Activity, error) {
 	var activities []*strava.Activity
-	err := client.Activity.ActivitiesIter(
+	err := strava.ActivitiesIter(
 		client.Activity.Activities(ctx, spec, opts...),
 		func(act *strava.Activity) (bool, error) {
 			activities = append(activities, act)
