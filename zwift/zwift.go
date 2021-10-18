@@ -11,7 +11,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-//go:generate genwith --do --client --token --ratelimit --package zwift
+//go:generate genwith --do --client --token --ratelimit --config --endpoint-func --package zwift
 
 const _baseURL = "https://us-or-rly101.zwift.com"
 const userAgent = "CNL/3.4.1 (Darwin Kernel 20.3.0) zwift/1.0.61590 curl/7.64.1"
@@ -28,6 +28,7 @@ func Endpoint() oauth2.Endpoint {
 type Client struct {
 	token   *oauth2.Token
 	client  *http.Client
+	config  oauth2.Config
 	baseURL string
 
 	Auth     *AuthService
