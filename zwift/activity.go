@@ -32,7 +32,7 @@ func (p *paginator) Count() int {
 }
 
 func (p *paginator) Do(ctx context.Context, spec activity.Pagination) (int, error) {
-	// pagination uses the concept of page (based on strava), rwgps uses an offset by row
+	// pagination uses the concept of page (based on strava), zwift uses an offset by row
 	//  since pagination starts with page 1 (again, strava), subtract one from `start`
 	count := spec.Count
 	start := int64((spec.Start - 1) * p.PageSize())
