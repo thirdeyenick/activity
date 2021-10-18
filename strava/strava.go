@@ -22,6 +22,9 @@ const (
 	PageSize = 100
 )
 
+// APIOption for configuring API requests
+type APIOption func(url.Values) error
+
 // Endpoint is Strava's OAuth 2.0 endpoint
 func Endpoint() oauth2.Endpoint {
 	return oauth2.Endpoint{

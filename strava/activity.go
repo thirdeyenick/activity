@@ -8,7 +8,9 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"strings"
+	"time"
 
 	"github.com/bzimmer/activity"
 	"golang.org/x/sync/errgroup"
@@ -20,9 +22,23 @@ type ActivityService service
 // ActivityIterFunc is called for each activity in the results
 type ActivityIterFunc func(*Activity) (bool, error)
 
+// WithDateRange sets the before and after date range
+func WithDateRange(before, after time.Time) APIOption {
+	return func(v url.Values) error {
+		if !before.IsZero() {
+			v.Set("before", fmt.Sprintf("%d", before.Unix()))
+		}
+		if !after.IsZero() {
+			v.Set("after", fmt.Sprintf("%d", after.Unix()))
+		}
+		return nil
+	}
+}
+
 type channelPaginator struct {
-	service    ActivityService
 	count      int
+	options    []APIOption
+	service    ActivityService
 	activities chan *ActivityResult
 }
 
@@ -35,7 +51,18 @@ func (p *channelPaginator) Count() int {
 }
 
 func (p *channelPaginator) Do(ctx context.Context, spec activity.Pagination) (int, error) {
-	uri := fmt.Sprintf("athlete/activities?page=%d&per_page=%d", spec.Start, spec.Count)
+	v := make(url.Values)
+	v.Set("page", fmt.Sprintf("%d", spec.Start))
+	v.Set("per_page", fmt.Sprintf("%d", spec.Count))
+	for _, opt := range p.options {
+		if opt == nil {
+			continue
+		}
+		if err := opt(v); err != nil {
+			return 0, err
+		}
+	}
+	uri := fmt.Sprintf("athlete/activities?%s", v.Encode())
 	req, err := p.service.client.newAPIRequest(ctx, http.MethodGet, uri, nil)
 	if err != nil {
 		return 0, err
@@ -113,13 +140,11 @@ func (s *ActivityService) Activity(ctx context.Context, activityID int64, stream
 }
 
 // Activities returns a channel for activities and errors for an athlete
-//
-// Either the first error or last activity will close the channel
-func (s *ActivityService) Activities(ctx context.Context, spec activity.Pagination) <-chan *ActivityResult {
+func (s *ActivityService) Activities(ctx context.Context, spec activity.Pagination, opts ...APIOption) <-chan *ActivityResult {
 	acts := make(chan *ActivityResult, PageSize)
 	go func() {
 		defer close(acts)
-		p := &channelPaginator{service: *s, activities: acts}
+		p := &channelPaginator{service: *s, activities: acts, options: opts}
 		err := activity.Paginate(ctx, p, spec)
 		if err != nil {
 			select {
@@ -133,8 +158,9 @@ func (s *ActivityService) Activities(ctx context.Context, spec activity.Paginati
 	return acts
 }
 
-func (s *ActivityService) ActivitiesIter(ctx context.Context, spec activity.Pagination, iter ActivityIterFunc) error {
-	for ar := range s.Activities(ctx, spec) {
+// ActivitiesIter executes the iter function over the results of the channel
+func (s *ActivityService) ActivitiesIter(res <-chan *ActivityResult, iter ActivityIterFunc) error {
+	for ar := range res {
 		if ar.Err != nil {
 			return ar.Err
 		}
