@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 
@@ -17,12 +19,14 @@ import (
 	"github.com/bzimmer/activity/strava"
 )
 
-func readall(ctx context.Context, client *strava.Client, spec activity.Pagination) ([]*strava.Activity, error) {
+func readall(ctx context.Context, client *strava.Client, spec activity.Pagination, opts ...strava.APIOption) ([]*strava.Activity, error) {
 	var activities []*strava.Activity
-	err := client.Activity.ActivitiesIter(ctx, spec, func(act *strava.Activity) (bool, error) {
-		activities = append(activities, act)
-		return true, nil
-	})
+	err := client.Activity.ActivitiesIter(
+		client.Activity.Activities(ctx, spec, opts...),
+		func(act *strava.Activity) (bool, error) {
+			activities = append(activities, act)
+			return true, nil
+		})
 	return activities, err
 }
 
@@ -54,6 +58,60 @@ func TestActivities(t *testing.T) {
 	acts, err := readall(ctx, client, activity.Pagination{})
 	a.NoError(err)
 	a.Equal(2, len(acts))
+}
+
+func TestActivitiesWithOptions(t *testing.T) {
+	t.Parallel()
+	a := assert.New(t)
+
+	for _, tt := range []struct {
+		name string
+		err  bool
+		opt  strava.APIOption
+	}{
+		{
+			name: "nil options",
+			opt:  nil,
+		},
+		{
+			name: "err options",
+			err:  true,
+			opt: func(url.Values) error {
+				return errors.New("error in option")
+			},
+		},
+		{
+			name: "zero dates",
+			opt:  strava.WithDateRange(time.Time{}, time.Time{}),
+		},
+		{
+			name: "before and after",
+			opt: func() strava.APIOption {
+				before := time.Now()
+				after := before.Add(time.Hour * time.Duration(-24*7))
+				return strava.WithDateRange(before, after)
+			}(),
+		},
+	} {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+			client, err := strava.NewClient(
+				strava.WithTransport(&ManyTransport{
+					Filename: "testdata/activity.json",
+					Total:    2,
+				}),
+				strava.WithTokenCredentials("fooKey", "barToken", time.Time{}))
+			a.NoError(err)
+			acts, err := readall(ctx, client, activity.Pagination{}, tt.opt)
+			if tt.err {
+				a.Error(err)
+			} else {
+				a.NoError(err)
+				a.Equal(2, len(acts))
+			}
+		})
+	}
 }
 
 type F struct {
