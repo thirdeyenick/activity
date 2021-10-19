@@ -30,7 +30,7 @@ func (d *Datetime) UnmarshalJSON(b []byte) (err error) {
 	return
 }
 
-func (d *Datetime) MarshalJSON() ([]byte, error) {
+func (d Datetime) MarshalJSON() ([]byte, error) {
 	return []byte(d.Time.Format(datetimeFormat)), nil
 }
 
@@ -134,8 +134,6 @@ type Profile struct {
 	Affiliate                    string       `json:"affiliate"`
 	AvantlinkID                  string       `json:"avantlinkId"`
 	FundraiserID                 string       `json:"fundraiserId"`
-	// PublicAttributes             interface{} `json:"publicAttributes"`
-	// PrivateAttributes            interface{} `json:"privateAttributes"`
 }
 
 type Activity struct {
@@ -165,5 +163,4 @@ type Activity struct {
 	PrimaryImageURL      string   `json:"primaryImageUrl"`
 	MovingTimeInMillis   int      `json:"movingTimeInMs"`
 	Privacy              string   `json:"privacy"`
-	// SnapshotList         interface{} `json:"snapshotList"`
 }
