@@ -402,3 +402,45 @@ func TestUpload(t *testing.T) {
 		})
 	}
 }
+
+func TestExporter(t *testing.T) {
+	a := assert.New(t)
+
+	newMux := func() *http.ServeMux {
+		mux := http.NewServeMux()
+		mux.HandleFunc("/activities/6099369285", func(w http.ResponseWriter, r *http.Request) {
+			a.NoError(copyFile(w, "testdata/activity.json"))
+		})
+		mux.HandleFunc("/activities/6099369285/streams/", func(w http.ResponseWriter, r *http.Request) {
+			a.NoError(copyFile(w, "testdata/streams_export.json"))
+		})
+		return mux
+	}
+
+	tests := []struct {
+		id   int64
+		name string
+	}{
+		{
+			id:   6099369285,
+			name: "export activity",
+		},
+	}
+
+	for i := range tests {
+		tt := tests[i]
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			svr := httptest.NewServer(newMux())
+			defer svr.Close()
+
+			client, err := newTestClient(strava.WithBaseURL(svr.URL))
+			a.NoError(err)
+			exporter := client.Exporter()
+			export, err := exporter.Export(context.Background(), tt.id)
+			a.NoError(err)
+			a.NotNil(export)
+		})
+	}
+}

@@ -53,6 +53,11 @@ func (c *Client) Uploader() activity.Uploader {
 	return newUploader(c.Activity)
 }
 
+// Exporter returns an Exporter for this client
+func (c *Client) Exporter() activity.Exporter {
+	return c.Activity
+}
+
 // WithBaseURL specifies the base url
 func WithBaseURL(baseURL string) Option {
 	return func(c *Client) error {

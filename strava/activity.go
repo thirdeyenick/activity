@@ -9,6 +9,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -21,6 +22,9 @@ type ActivityService service
 
 // ActivityIterFunc is called for each activity in the results
 type ActivityIterFunc func(*Activity) (bool, error)
+
+// fileNameRE allowable characters
+var fileNameRE = regexp.MustCompile("[A-Za-z0-9-]+")
 
 // WithDateRange sets the before and after date range
 func WithDateRange(before, after time.Time) APIOption {
@@ -280,4 +284,30 @@ func (s *ActivityService) Photos(ctx context.Context, activityID int64, size int
 		return nil, err
 	}
 	return photos, nil
+}
+
+// Export exports an activity in the GPX format
+func (s *ActivityService) Export(ctx context.Context, activityID int64) (*activity.Export, error) {
+	act, err := s.Activity(ctx, activityID, "latlng", "time", "altitude")
+	if err != nil {
+		return nil, err
+	}
+	x, err := act.GPX()
+	if err != nil {
+		return nil, err
+	}
+	var buf bytes.Buffer
+	if err := x.Write(&buf); err != nil {
+		return nil, err
+	}
+	name := strings.Join(fileNameRE.FindAllString(act.Name, -1), "_")
+	exp := &activity.Export{
+		File: &activity.File{
+			Reader: &buf,
+			Name:   name,
+			Format: activity.FormatGPX,
+		},
+		ID: activityID,
+	}
+	return exp, nil
 }
