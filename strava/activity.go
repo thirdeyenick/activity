@@ -29,6 +29,11 @@ var fileNameRE = regexp.MustCompile("[A-Za-z0-9-]+")
 // WithDateRange sets the before and after date range
 func WithDateRange(before, after time.Time) APIOption {
 	return func(v url.Values) error {
+		if !before.IsZero() && !after.IsZero() {
+			if after.After(before) {
+				return errors.New("invalid date range")
+			}
+		}
 		if !before.IsZero() {
 			v.Set("before", fmt.Sprintf("%d", before.Unix()))
 		}
