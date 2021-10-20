@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sync"
+	"time"
 
 	"github.com/bzimmer/activity"
 	"golang.org/x/oauth2"
@@ -26,10 +28,14 @@ func Endpoint() oauth2.Endpoint {
 
 // Client for communicating with Zwift
 type Client struct {
-	token   *oauth2.Token
-	client  *http.Client
-	config  oauth2.Config
-	baseURL string
+	token    *oauth2.Token
+	client   *http.Client
+	config   oauth2.Config
+	baseURL  string
+	username string
+	password string
+
+	lock sync.RWMutex
 
 	Auth     *AuthService
 	Activity *ActivityService
@@ -49,6 +55,7 @@ func withServices() Option {
 		if c.baseURL == "" {
 			c.baseURL = _baseURL
 		}
+		c.lock = sync.RWMutex{}
 		return nil
 	}
 }
@@ -61,12 +68,44 @@ func WithBaseURL(baseURL string) Option {
 	}
 }
 
-func (c *Client) newAPIRequest(ctx context.Context, method, uri string) (*http.Request, error) {
-	if c.token.AccessToken == "" {
-		return nil, errors.New("accessToken required")
+// WithTokenRefresh refreshes the access token if none is provided
+func WithTokenRefresh(username, password string) Option {
+	return func(c *Client) error {
+		c.username = username
+		c.password = password
+		return nil
 	}
-	q := fmt.Sprintf("%s/%s", c.baseURL, uri)
-	u, err := url.Parse(q)
+}
+
+func (c *Client) validateToken(ctx context.Context) error {
+	c.lock.RLock()
+	// if no access token try to acquire one
+	if c.token != nil && c.token.AccessToken != "" {
+		c.lock.RUnlock()
+		return nil
+	}
+	c.lock.RUnlock()
+	// bail if username and password are not available
+	if c.username == "" || c.password == "" {
+		return errors.New("accessToken required")
+	}
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
+	token, err := c.Auth.Refresh(ctx, c.username, c.password)
+	if err != nil {
+		return err
+	}
+	c.token = token
+	return nil
+}
+
+func (c *Client) newAPIRequest(ctx context.Context, method, uri string) (*http.Request, error) {
+	if err := c.validateToken(ctx); err != nil {
+		return nil, err
+	}
+	u, err := url.Parse(fmt.Sprintf("%s/%s", c.baseURL, uri))
 	if err != nil {
 		return nil, err
 	}

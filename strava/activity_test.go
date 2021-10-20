@@ -444,3 +444,47 @@ func TestExporter(t *testing.T) {
 		})
 	}
 }
+
+func TestWithDateRange(t *testing.T) {
+	t.Parallel()
+	a := assert.New(t)
+	tests := []struct {
+		name          string
+		before, after time.Time
+		length        int
+		err           string
+	}{
+		{
+			name: "both zero",
+		},
+		{
+			name:   "invalid range",
+			before: time.Now(),
+			after:  time.Now().Add(time.Hour),
+			err:    "invalid date range",
+		},
+		{
+			name:   "valid range",
+			before: time.Now(),
+			after:  time.Now().Add(-time.Hour),
+			length: 2,
+		},
+	}
+
+	for i := range tests {
+		tt := tests[i]
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			v := url.Values{}
+			opt := strava.WithDateRange(tt.before, tt.after)
+			err := opt(v)
+			if tt.err != "" {
+				a.Error(err)
+				a.Contains(err.Error(), tt.err)
+				return
+			}
+			a.NoError(opt(v))
+			a.Equal(tt.length, len(v))
+		})
+	}
+}
