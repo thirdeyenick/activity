@@ -40,7 +40,7 @@ func (d *Datetime) UnmarshalJSON(b []byte) (err error) {
 	return
 }
 
-func (d *Datetime) MarshalJSON() ([]byte, error) {
+func (d Datetime) MarshalJSON() ([]byte, error) {
 	return []byte(d.Time.Format(datetimeFormat)), nil
 }
 
