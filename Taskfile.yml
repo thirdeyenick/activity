@@ -43,5 +43,4 @@ tasks:
   lint:
     desc: Runs the linter
     cmds:
-      - go vet ./...
       - golangci-lint -v run
