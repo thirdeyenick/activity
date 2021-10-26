@@ -18,7 +18,7 @@ func TestGPXFromRoute(t *testing.T) {
 	newMux := func() *http.ServeMux {
 		mux := http.NewServeMux()
 		mux.HandleFunc("/routes/26587226", func(w http.ResponseWriter, r *http.Request) {
-			a.NoError(copyFile(w, "testdata/route.json"))
+			http.ServeFile(w, r, "testdata/route.json")
 		})
 		return mux
 	}
@@ -86,13 +86,13 @@ func TestGPXFromActivity(t *testing.T) {
 	newMux := func() *http.ServeMux {
 		mux := http.NewServeMux()
 		mux.HandleFunc("/activities/12345", func(w http.ResponseWriter, r *http.Request) {
-			a.NoError(copyFile(w, "testdata/activity.json"))
+			http.ServeFile(w, r, "testdata/activity.json")
 		})
 		mux.HandleFunc("/activities/66282823", func(w http.ResponseWriter, r *http.Request) {
-			a.NoError(copyFile(w, "testdata/activity_with_polyline.json"))
+			http.ServeFile(w, r, "testdata/activity_with_polyline.json")
 		})
 		mux.HandleFunc("/activities/66282823/streams/latlng,altitude,time", func(w http.ResponseWriter, r *http.Request) {
-			a.NoError(copyFile(w, "testdata/streams.json"))
+			http.ServeFile(w, r, "testdata/streams.json")
 		})
 		return mux
 	}

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"testing"
 	"time"
 
@@ -291,7 +292,7 @@ func TestPhotos(t *testing.T) {
 	newMux := func() *http.ServeMux {
 		mux := http.NewServeMux()
 		mux.HandleFunc("/activities/6099369285/photos", func(w http.ResponseWriter, r *http.Request) {
-			a.NoError(copyFile(w, "testdata/photos.json"))
+			http.ServeFile(w, r, "testdata/photos.json")
 		})
 		return mux
 	}
@@ -368,9 +369,13 @@ func TestUpload(t *testing.T) {
 				Filename: "/tmp/LongHike.gpx",
 				Format:   activity.FormatGPX,
 				Reader: func() io.Reader {
-					var buf bytes.Buffer
-					a.NoError(copyFile(&buf, "testdata/example.gpx"))
-					return &buf
+					var w bytes.Buffer
+					fp, err := os.Open("testdata/example.gpx")
+					a.NoError(err)
+					defer fp.Close()
+					_, err = io.Copy(&w, fp)
+					a.NoError(err)
+					return &w
 				}(),
 			},
 		},
@@ -409,10 +414,10 @@ func TestExporter(t *testing.T) {
 	newMux := func() *http.ServeMux {
 		mux := http.NewServeMux()
 		mux.HandleFunc("/activities/6099369285", func(w http.ResponseWriter, r *http.Request) {
-			a.NoError(copyFile(w, "testdata/activity.json"))
+			http.ServeFile(w, r, "testdata/activity.json")
 		})
 		mux.HandleFunc("/activities/6099369285/streams/", func(w http.ResponseWriter, r *http.Request) {
-			a.NoError(copyFile(w, "testdata/streams_export.json"))
+			http.ServeFile(w, r, "testdata/streams_export.json")
 		})
 		return mux
 	}

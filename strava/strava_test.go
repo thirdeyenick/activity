@@ -12,16 +12,6 @@ import (
 	"github.com/bzimmer/httpwares"
 )
 
-func copyFile(w io.Writer, filename string) error {
-	fp, err := os.Open(filename)
-	if err != nil {
-		return err
-	}
-	defer fp.Close()
-	_, err = io.Copy(w, fp)
-	return err
-}
-
 func newTestClient(opts ...strava.Option) (*strava.Client, error) {
 	o := []strava.Option{
 		strava.WithHTTPTracing(false),
