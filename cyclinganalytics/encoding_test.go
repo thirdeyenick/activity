@@ -23,13 +23,13 @@ func TestRideGPX(t *testing.T) {
 	a.NoError(err)
 	a.NotNil(ride)
 	a.NotNil(ride.Streams)
-	a.Equal(27154, len(ride.Streams.Elevation))
-	a.Equal(27154, len(ride.Streams.Latitude))
-	a.Equal(27154, len(ride.Streams.Longitude))
+	a.Equal(5, len(ride.Streams.Elevation))
+	a.Equal(5, len(ride.Streams.Latitude))
+	a.Equal(5, len(ride.Streams.Longitude))
 
 	gpx, err := ride.GPX()
 	a.NoError(err)
 	a.NotNil(gpx)
-	a.Equal(27154, len(gpx.Trk[0].TrkSeg[0].TrkPt))
+	a.Equal(5, len(gpx.Trk[0].TrkSeg[0].TrkPt))
 	a.Equal(0, len(gpx.Rte))
 }

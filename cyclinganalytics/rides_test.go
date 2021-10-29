@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 	"time"
 
@@ -74,10 +75,10 @@ func TestRide(t *testing.T) {
 			a.NoError(err)
 			a.NotNil(ride)
 			a.NotNil(ride.Streams)
-			a.Equal(27154, len(ride.Streams.Elevation))
+			a.Equal(5, len(ride.Streams.Elevation))
 			gears := ride.Streams.Gears
 			a.NotNil(gears)
-			a.Equal(813, len(gears.Shifts))
+			a.Equal(6, len(gears.Shifts))
 		})
 	}
 }
@@ -120,10 +121,30 @@ func TestRides(t *testing.T) {
 				cyclinganalytics.WithHTTPTracing(false),
 				cyclinganalytics.WithTokenCredentials("fooKey", "barToken", time.Time{}))
 			a.NoError(err)
-			rides, err := client.Rides.Rides(context.Background(), tt.user, activity.Pagination{})
+			rides, err := client.Rides.Rides(context.Background(), tt.user, activity.Pagination{Total: 300})
 			a.NoError(err)
 			a.NotNil(rides)
 			a.Len(rides, 2)
 		})
 	}
+}
+
+func TestRideOptions(t *testing.T) {
+	a := assert.New(t)
+	v := url.Values{}
+	opt := cyclinganalytics.WithRideOptions(cyclinganalytics.RideOptions{
+		Streams: []string{"power", "latitude"},
+	})
+	a.Empty(v)
+	a.NoError(opt(v))
+	a.Len(v, 3)
+	a.Equal("epower_curve=false&power_curve=false&streams=power%2Clatitude", v.Encode())
+	r := cyclinganalytics.RideOptions{}
+	r.Curves.AveragePower = true
+	r.Curves.EffectivePower = true
+	v = url.Values{}
+	opt = cyclinganalytics.WithRideOptions(r)
+	a.NoError(opt(v))
+	a.Len(v, 1)
+	a.Equal("curves=true", v.Encode())
 }

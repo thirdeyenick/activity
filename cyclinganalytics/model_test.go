@@ -11,31 +11,30 @@ import (
 	"github.com/bzimmer/activity/cyclinganalytics"
 )
 
-func TestModel(t *testing.T) {
+func TestDateTime(t *testing.T) {
 	t.Parallel()
-	a := assert.New(t)
 
 	tests := []struct {
 		name string
+		date cyclinganalytics.Datetime
 	}{
 		{
 			name: "success",
+			date: cyclinganalytics.Datetime{Time: time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)},
 		},
 	}
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			a := assert.New(t)
 			t.Parallel()
-			src := cyclinganalytics.Ride{
-				UTCDatetime: cyclinganalytics.Datetime{Time: time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)},
-			}
 			var buf bytes.Buffer
 			enc := json.NewEncoder(&buf)
-			a.NoError(enc.Encode(src))
-			var dst cyclinganalytics.Ride
+			a.NoError(enc.Encode(tt.date))
 			dec := json.NewDecoder(&buf)
+			var dst cyclinganalytics.Datetime
 			a.NoError(dec.Decode(&dst))
-			a.Equal(src.UTCDatetime, dst.UTCDatetime)
+			a.Equal(tt.date, dst)
 		})
 	}
 }
