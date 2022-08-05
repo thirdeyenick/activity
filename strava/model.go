@@ -143,34 +143,34 @@ type Club struct {
 
 // Athlete represents a Strava athlete
 type Athlete struct {
-	ID                    int         `json:"id"`
-	Username              string      `json:"username"`
-	ResourceState         int         `json:"resource_state"`
-	Firstname             string      `json:"firstname"`
-	Lastname              string      `json:"lastname"`
-	City                  string      `json:"city"`
-	State                 string      `json:"state"`
-	Country               string      `json:"country"`
-	Sex                   string      `json:"sex"`
-	Premium               bool        `json:"premium"`
-	CreatedAt             time.Time   `json:"created_at"`
-	UpdatedAt             time.Time   `json:"updated_at"`
-	BadgeTypeID           int         `json:"badge_type_id"`
-	ProfileMedium         string      `json:"profile_medium"`
-	Profile               string      `json:"profile"`
-	Friend                interface{} `json:"friend"`
-	Follower              interface{} `json:"follower"`
-	FollowerCount         int         `json:"follower_count"`
-	FriendCount           int         `json:"friend_count"`
-	MutualFriendCount     int         `json:"mutual_friend_count"`
-	AthleteType           int         `json:"athlete_type"`
-	DatePreference        string      `json:"date_preference"`
-	MeasurementPreference string      `json:"measurement_preference"`
-	Clubs                 []*Club     `json:"clubs"`
-	FTP                   float64     `json:"ftp"`
-	Weight                unit.Mass   `json:"weight" units:"kg"`
-	Bikes                 []*Gear     `json:"bikes"`
-	Shoes                 []*Gear     `json:"shoes"`
+	ID                    int       `json:"id"`
+	Username              string    `json:"username"`
+	ResourceState         int       `json:"resource_state"`
+	Firstname             string    `json:"firstname"`
+	Lastname              string    `json:"lastname"`
+	City                  string    `json:"city"`
+	State                 string    `json:"state"`
+	Country               string    `json:"country"`
+	Sex                   string    `json:"sex"`
+	Premium               bool      `json:"premium"`
+	CreatedAt             time.Time `json:"created_at"`
+	UpdatedAt             time.Time `json:"updated_at"`
+	BadgeTypeID           int       `json:"badge_type_id"`
+	ProfileMedium         string    `json:"profile_medium"`
+	Profile               string    `json:"profile"`
+	Friend                any       `json:"friend"`
+	Follower              any       `json:"follower"`
+	FollowerCount         int       `json:"follower_count"`
+	FriendCount           int       `json:"friend_count"`
+	MutualFriendCount     int       `json:"mutual_friend_count"`
+	AthleteType           int       `json:"athlete_type"`
+	DatePreference        string    `json:"date_preference"`
+	MeasurementPreference string    `json:"measurement_preference"`
+	Clubs                 []*Club   `json:"clubs"`
+	FTP                   float64   `json:"ftp"`
+	Weight                unit.Mass `json:"weight" units:"kg"`
+	Bikes                 []*Gear   `json:"bikes"`
+	Shoes                 []*Gear   `json:"shoes"`
 }
 
 // Map of the activity or route
@@ -352,6 +352,18 @@ type Photos struct {
 	Count           int  `json:"count"`
 }
 
+// UpdatableActivity represents an activity with updatable attributes
+type UpdatableActivity struct {
+	ID          int64   `json:"id"`
+	Commute     *bool   `json:"commute,omitempty"`
+	Trainer     *bool   `json:"trainer,omitempty"`
+	Hidden      *bool   `json:"hide_from_home,omitempty"`
+	Description *string `json:"description,omitempty"`
+	Name        *string `json:"name,omitempty"`
+	SportType   *string `json:"sport_type,omitempty"`
+	GearID      *string `json:"gear_id,omitempty"`
+}
+
 // Activity represents an activity
 type Activity struct {
 	ID                       int64                  `json:"id"`
@@ -360,11 +372,13 @@ type Activity struct {
 	UploadID                 int64                  `json:"upload_id"`
 	Athlete                  *Athlete               `json:"athlete"`
 	Name                     string                 `json:"name"`
+	Hidden                   bool                   `json:"hide_from_home"`
 	Distance                 unit.Length            `json:"distance" units:"m"`
 	MovingTime               unit.Duration          `json:"moving_time" units:"s"`
 	ElapsedTime              unit.Duration          `json:"elapsed_time" units:"s"`
 	ElevationGain            unit.Length            `json:"total_elevation_gain" units:"m"`
 	Type                     string                 `json:"type"`
+	SportType                string                 `json:"sport_type"`
 	StartDate                time.Time              `json:"start_date"`
 	StartDateLocal           time.Time              `json:"start_date_local"`
 	Timezone                 string                 `json:"timezone"`
