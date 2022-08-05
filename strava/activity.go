@@ -3,6 +3,7 @@ package strava
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -107,8 +108,7 @@ func (s *ActivityService) Streams(ctx context.Context, activityID int64, streams
 		return nil, err
 	}
 	sts := &Streams{}
-	err = s.client.do(req, sts)
-	if err != nil {
+	if err = s.client.do(req, sts); err != nil {
 		return nil, err
 	}
 	sts.ActivityID = activityID
@@ -218,8 +218,7 @@ func (s *ActivityService) Upload(ctx context.Context, file *activity.File) (*Upl
 	req.Header.Set("Content-Type", w.FormDataContentType())
 
 	res := &Upload{}
-	err = s.client.do(req, res)
-	if err != nil {
+	if err = s.client.do(req, res); err != nil {
 		return nil, err
 	}
 	return res, nil
@@ -284,8 +283,7 @@ func (s *ActivityService) Photos(ctx context.Context, activityID int64, size int
 		return nil, err
 	}
 	var photos []*Photo
-	err = s.client.do(req, &photos)
-	if err != nil {
+	if err = s.client.do(req, &photos); err != nil {
 		return nil, err
 	}
 	return photos, nil
@@ -315,4 +313,24 @@ func (s *ActivityService) Export(ctx context.Context, activityID int64) (*activi
 		ID: activityID,
 	}
 	return exp, nil
+}
+
+// Update the given activity owned by the authenticated athlete
+func (s *ActivityService) Update(ctx context.Context, act *UpdatableActivity) (*Activity, error) {
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	if err := enc.Encode(act); err != nil {
+		return nil, err
+	}
+	uri := fmt.Sprintf("activities/%d", act.ID)
+	req, err := s.client.newAPIRequest(ctx, http.MethodPut, uri, &buf)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Content-Type", "application/json")
+	res := new(Activity)
+	if err = s.client.do(req, res); err != nil {
+		return nil, err
+	}
+	return res, nil
 }
