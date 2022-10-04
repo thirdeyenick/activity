@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -169,6 +170,52 @@ func TestPagination(t *testing.T) {
 				trips, err = client.Trips.Routes(context.TODO(), rwgps.UserID(88272), activity.Pagination{Total: 2})
 			}
 			tt.after(trips, err)
+		})
+	}
+}
+
+func TestStatus(t *testing.T) {
+	t.Parallel()
+	a := assert.New(t)
+
+	tests := []struct {
+		name   string
+		before func(mux *http.ServeMux)
+		after  func(status *rwgps.Upload, err error)
+	}{
+		{
+			name: "valid status",
+			before: func(mux *http.ServeMux) {
+				mux.HandleFunc("/queued_tasks/status.json", func(w http.ResponseWriter, r *http.Request) {
+					dec := json.NewDecoder(r.Body)
+					m := make(map[string]string)
+					a.NoError(dec.Decode(&m))
+					ids := m["ids"]
+					a.NotEmpty(ids)
+					n, err := strconv.ParseInt(ids, 10, 64)
+					a.NoError(err)
+					enc := json.NewEncoder(w)
+					a.NoError(enc.Encode(&rwgps.Upload{
+						TaskID:  n,
+						Success: 1,
+					}))
+				})
+			},
+			after: func(status *rwgps.Upload, err error) {
+				a.NoError(err)
+				a.NotNil(status)
+				a.Equal(int64(7818), status.TaskID)
+			},
+		},
+	}
+	for i := range tests {
+		tt := tests[i]
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			client, svr := newClient(tt.before)
+			defer svr.Close()
+			status, err := client.Trips.Status(context.TODO(), 7818)
+			tt.after(status, err)
 		})
 	}
 }

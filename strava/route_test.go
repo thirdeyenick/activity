@@ -45,7 +45,7 @@ func TestRoute(t *testing.T) {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			client, svr := newClient(tt.before)
+			client, svr := newClientMust(tt.before)
 			defer svr.Close()
 			tt.after(client.Route.Route(context.TODO(), 26587226))
 		})
@@ -104,7 +104,7 @@ func TestRoutes(t *testing.T) {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			client, svr := newClient(func(mux *http.ServeMux) {
+			client, svr := newClientMust(func(mux *http.ServeMux) {
 				mux.Handle("/athletes/26587226/routes", &ManyHandler{
 					Filename: "testdata/route.json",
 				})

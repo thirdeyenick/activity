@@ -35,7 +35,7 @@ func TestRefresh(t *testing.T) {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			client, svr := newClient(tt.before)
+			client, svr := newClientMust(tt.before)
 			defer svr.Close()
 			token, err := client.Auth.Refresh(context.TODO())
 			tt.after(token, err)

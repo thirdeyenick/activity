@@ -42,13 +42,12 @@ func TestActivity(t *testing.T) {
 		},
 		{
 			name:    "timeout lt sleep => failure",
-			timeout: time.Millisecond,
+			timeout: 005 * time.Millisecond,
 			before: func(mux *http.ServeMux) {
 				mux.HandleFunc("/activities/154504250376823", func(w http.ResponseWriter, r *http.Request) {
 					select {
 					case <-r.Context().Done():
-						w.WriteHeader(http.StatusInternalServerError)
-					case <-time.After(15 * time.Millisecond):
+					case <-time.After(time.Minute):
 						http.ServeFile(w, r, "testdata/activity.json")
 					}
 				})
@@ -61,12 +60,11 @@ func TestActivity(t *testing.T) {
 		},
 		{
 			name:    "timeout gt sleep => success",
-			timeout: time.Millisecond * 120,
+			timeout: 120 * time.Millisecond,
 			before: func(mux *http.ServeMux) {
 				mux.HandleFunc("/activities/154504250376823", func(w http.ResponseWriter, r *http.Request) {
 					select {
 					case <-r.Context().Done():
-						w.WriteHeader(http.StatusInternalServerError)
 					case <-time.After(15 * time.Millisecond):
 						http.ServeFile(w, r, "testdata/activity.json")
 					}
@@ -81,7 +79,7 @@ func TestActivity(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			client, svr := newClient(tt.before)
+			client, svr := newClientMust(tt.before)
 			defer svr.Close()
 			ctx := context.TODO()
 			if tt.timeout > 0 {
@@ -253,7 +251,7 @@ func TestActivities(t *testing.T) {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			client, svr := newClient(tt.before)
+			client, svr := newClientMust(tt.before)
 			defer svr.Close()
 			tt.after(client.Activity.Activities(context.TODO(), tt.pagination, tt.opt))
 		})
@@ -316,7 +314,7 @@ func TestActivityStreams(t *testing.T) {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			client, svr := newClient(tt.before)
+			client, svr := newClientMust(tt.before)
 			defer svr.Close()
 			tt.after(client.Activity.Streams(context.TODO(), 8002, tt.streams...))
 		})
@@ -326,7 +324,7 @@ func TestActivityStreams(t *testing.T) {
 func TestStreamSets(t *testing.T) {
 	t.Parallel()
 	a := assert.New(t)
-	client, svr := newClient(func(_ *http.ServeMux) {})
+	client, svr := newClientMust(func(_ *http.ServeMux) {})
 	defer svr.Close()
 	s := client.Activity.StreamSets()
 	a.NotNil(s)
@@ -350,7 +348,7 @@ func TestPhotos(t *testing.T) {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			client, svr := newClient(func(mux *http.ServeMux) {
+			client, svr := newClientMust(func(mux *http.ServeMux) {
 				mux.HandleFunc("/activities/6099369285/photos", func(w http.ResponseWriter, r *http.Request) {
 					http.ServeFile(w, r, "testdata/photos.json")
 				})
@@ -400,7 +398,7 @@ func TestUpload(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			client, svr := newClient(func(mux *http.ServeMux) {
+			client, svr := newClientMust(func(mux *http.ServeMux) {
 				up := &strava.Upload{
 					ID:         12345,
 					IDString:   "12345",
@@ -453,7 +451,7 @@ func TestExporter(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			client, svr := newClient(func(mux *http.ServeMux) {
+			client, svr := newClientMust(func(mux *http.ServeMux) {
 				mux.HandleFunc("/activities/6099369285", func(w http.ResponseWriter, r *http.Request) {
 					http.ServeFile(w, r, "testdata/activity.json")
 				})
@@ -541,7 +539,7 @@ func TestUpdate(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			client, svr := newClient(func(mux *http.ServeMux) {
+			client, svr := newClientMust(func(mux *http.ServeMux) {
 				mux.HandleFunc("/activities/1001", func(w http.ResponseWriter, r *http.Request) {
 					a.Equal(http.MethodPut, r.Method)
 					act := decoder(r)

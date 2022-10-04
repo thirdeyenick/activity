@@ -40,7 +40,7 @@ func TestGPXRoute(t *testing.T) {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			client, svr := newClient(func(mux *http.ServeMux) {
+			client, svr := newClientMust(func(mux *http.ServeMux) {
 				mux.HandleFunc("/routes/26587226", func(w http.ResponseWriter, r *http.Request) {
 					http.ServeFile(w, r, "testdata/route.json")
 				})
@@ -121,7 +121,7 @@ func TestGPXActivity(t *testing.T) {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			client, svr := newClient(before)
+			client, svr := newClientMust(before)
 			defer svr.Close()
 			act, err := client.Activity.Activity(context.Background(), tt.id, tt.streams...)
 			a.NoError(err)

@@ -1,16 +1,29 @@
 package strava_test
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strconv"
+	"testing"
 	"time"
 
 	"github.com/bzimmer/activity/strava"
+	"github.com/stretchr/testify/assert"
+	"golang.org/x/oauth2"
+	"golang.org/x/time/rate"
 )
 
-func newClient(before func(*http.ServeMux), opts ...strava.Option) (*strava.Client, *httptest.Server) {
+func newClientMust(before func(*http.ServeMux), opts ...strava.Option) (*strava.Client, *httptest.Server) {
+	client, svr, err := newClient(before, opts...)
+	if err != nil {
+		panic(err)
+	}
+	return client, svr
+}
+
+func newClient(before func(*http.ServeMux), opts ...strava.Option) (*strava.Client, *httptest.Server, error) {
 	mux := http.NewServeMux()
 	before(mux)
 	svr := httptest.NewServer(mux)
@@ -19,11 +32,14 @@ func newClient(before func(*http.ServeMux), opts ...strava.Option) (*strava.Clie
 		strava.WithHTTPTracing(false),
 		strava.WithTokenCredentials("key", "token", time.Time{}),
 	}
-	client, err := strava.NewClient(append(options, opts...)...)
-	if err != nil {
-		panic(err)
+	if len(opts) > 0 {
+		options = append(options, opts...)
 	}
-	return client, svr
+	client, err := strava.NewClient(options...)
+	if err != nil {
+		return nil, nil, err
+	}
+	return client, svr, nil
 }
 
 type ManyHandler struct {
@@ -73,5 +89,79 @@ func (m *ManyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if _, err = w.Write([]byte("]")); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
+	}
+}
+
+func TestOptions(t *testing.T) {
+	t.Parallel()
+	a := assert.New(t)
+
+	for _, tt := range []struct {
+		name   string
+		before func() []strava.Option
+		after  func(client *strava.Client, err error)
+	}{
+		{
+			name: "empty option",
+			before: func() []strava.Option {
+				return nil
+			},
+			after: func(client *strava.Client, err error) {
+				a.NoError(err)
+				a.NotNil(client)
+			},
+		},
+		{
+			name: "with config",
+			before: func() []strava.Option {
+				return []strava.Option{strava.WithConfig(oauth2.Config{})}
+			},
+			after: func(client *strava.Client, err error) {
+				a.NoError(err)
+				a.NotNil(client)
+			},
+		},
+		{
+			name: "with refresh",
+			before: func() []strava.Option {
+				return []strava.Option{strava.WithAutoRefresh(context.TODO())}
+			},
+			after: func(client *strava.Client, err error) {
+				a.NoError(err)
+				a.NotNil(client)
+			},
+		},
+		{
+			name: "with rate limiter",
+			before: func() []strava.Option {
+				return []strava.Option{strava.WithRateLimiter(&rate.Limiter{})}
+			},
+			after: func(client *strava.Client, err error) {
+				a.NoError(err)
+				a.NotNil(client)
+			},
+		},
+		{
+			name: "with http tracing",
+			before: func() []strava.Option {
+				return []strava.Option{strava.WithHTTPTracing(true)}
+			},
+			after: func(client *strava.Client, err error) {
+				a.NoError(err)
+				a.NotNil(client)
+			},
+		},
+	} {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			client, svr, err := newClient(func(_ *http.ServeMux) {}, tt.before()...)
+			if err != nil {
+				tt.after(client, err)
+				return
+			}
+			defer svr.Close()
+			tt.after(client, nil)
+		})
 	}
 }
