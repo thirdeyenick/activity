@@ -53,7 +53,7 @@ func TestAthlete(t *testing.T) {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			client, svr := newClient(tt.before)
+			client, svr := newClientMust(tt.before)
 			defer svr.Close()
 			athlete, err := client.Athlete.Athlete(context.TODO())
 			tt.after(athlete, err)
@@ -90,7 +90,7 @@ func TestAthleteStats(t *testing.T) {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			client, svr := newClient(tt.before)
+			client, svr := newClientMust(tt.before)
 			defer svr.Close()
 			stats, err := client.Athlete.Stats(context.TODO(), 88273)
 			tt.after(stats, err)

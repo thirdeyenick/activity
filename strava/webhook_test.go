@@ -45,7 +45,7 @@ func TestWebhookSubscribe(t *testing.T) {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			client, svr := newClient(
+			client, svr := newClientMust(
 				tt.before, strava.WithClientCredentials("someID", "someSecret"))
 			defer svr.Close()
 			ack, err := client.Webhook.Subscribe(
@@ -81,7 +81,7 @@ func TestWebhookUnsubscribe(t *testing.T) {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			client, svr := newClient(tt.before)
+			client, svr := newClientMust(tt.before)
 			defer svr.Close()
 			err := client.Webhook.Unsubscribe(context.TODO(), 882722)
 			tt.after(err)
@@ -118,7 +118,7 @@ func TestWebhookList(t *testing.T) {
 		tt := tests[i]
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			client, svr := newClient(
+			client, svr := newClientMust(
 				tt.before, strava.WithClientCredentials("someID", "someSecret"))
 			defer svr.Close()
 			tt.after(client.Webhook.List(context.TODO()))
