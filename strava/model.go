@@ -419,6 +419,7 @@ type Activity struct {
 	WorkoutType              int                    `json:"workout_type"`
 	SufferScore              float64                `json:"suffer_score"`
 	Description              string                 `json:"description"`
+	PrivateNote              string                 `json:"private_note"`
 	Calories                 float64                `json:"calories"`
 	SegmentEfforts           []*SegmentEffort       `json:"segment_efforts,omitempty"`
 	SplitsMetric             []*SplitsMetric        `json:"splits_metric,omitempty"`
