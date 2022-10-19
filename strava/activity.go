@@ -14,8 +14,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bzimmer/activity"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/bzimmer/activity"
 )
 
 // ActivityService is the API for activity endpoints

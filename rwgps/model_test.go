@@ -3,9 +3,10 @@ package rwgps_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/bzimmer/activity"
 	"github.com/bzimmer/activity/rwgps"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestUpload(t *testing.T) {

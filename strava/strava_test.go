@@ -9,10 +9,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bzimmer/activity/strava"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/oauth2"
 	"golang.org/x/time/rate"
+
+	"github.com/bzimmer/activity/strava"
 )
 
 func newClientMust(before func(*http.ServeMux), opts ...strava.Option) (*strava.Client, *httptest.Server) {

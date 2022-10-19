@@ -3,9 +3,10 @@ package strava_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/bzimmer/activity"
 	"github.com/bzimmer/activity/strava"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestUploadDone(t *testing.T) {
