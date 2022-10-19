@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/bzimmer/activity/strava"
 	"github.com/martinlindhe/unit"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/bzimmer/activity/strava"
 )
 
 func TestAthlete(t *testing.T) {

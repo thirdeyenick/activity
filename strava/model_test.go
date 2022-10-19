@@ -3,8 +3,9 @@ package strava_test
 import (
 	"testing"
 
-	"github.com/bzimmer/activity/strava"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/bzimmer/activity/strava"
 )
 
 func TestFault(t *testing.T) {

@@ -10,8 +10,9 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/bzimmer/activity"
 	"golang.org/x/oauth2"
+
+	"github.com/bzimmer/activity"
 )
 
 const _baseURL = "https://www.cyclinganalytics.com/api"

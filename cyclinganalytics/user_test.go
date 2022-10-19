@@ -8,8 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bzimmer/activity/cyclinganalytics"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/bzimmer/activity/cyclinganalytics"
 )
 
 func TestUser(t *testing.T) {

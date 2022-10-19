@@ -44,3 +44,11 @@ tasks:
     desc: Runs the linter
     cmds:
       - golangci-lint -v run
+
+  goimports:
+    desc: Run goimports
+    vars:
+      Module:
+        sh: go mod edit -json | jq -r .Module.Path
+    cmds:
+      - goimports -w -local "{{.Module}}" .
