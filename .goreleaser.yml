@@ -15,4 +15,4 @@ changelog:
       - '^test:'
       - '^Merge pull request'
 announce:
-  skip: "true"
+  skip: true

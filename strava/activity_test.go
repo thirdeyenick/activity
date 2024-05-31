@@ -302,7 +302,7 @@ func TestActivityStreams(t *testing.T) {
 		{
 			name:    "invalid",
 			streams: []string{"foo", "bar", "baz"},
-			before:  func(mux *http.ServeMux) {},
+			before:  func(_ *http.ServeMux) {},
 			after: func(streams *strava.Streams, err error) {
 				a.Error(err)
 				a.Nil(streams)
@@ -407,11 +407,11 @@ func TestUpload(t *testing.T) {
 					Status:     "ok",
 					ActivityID: 54321,
 				}
-				mux.HandleFunc("/uploads", func(w http.ResponseWriter, r *http.Request) {
+				mux.HandleFunc("/uploads", func(w http.ResponseWriter, _ *http.Request) {
 					enc := json.NewEncoder(w)
 					a.NoError(enc.Encode(up))
 				})
-				mux.HandleFunc("/uploads/12345", func(w http.ResponseWriter, r *http.Request) {
+				mux.HandleFunc("/uploads/12345", func(w http.ResponseWriter, _ *http.Request) {
 					enc := json.NewEncoder(w)
 					a.NoError(enc.Encode(up))
 				})

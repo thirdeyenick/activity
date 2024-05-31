@@ -13,7 +13,7 @@ func TestRefresh(t *testing.T) {
 	a := assert.New(t)
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/token", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
 		n, err := w.Write([]byte(`{
 			"access_token":"000aaabbbccc999",
 			"token_type":"bearer",

@@ -35,8 +35,8 @@ func TestRoute(t *testing.T) {
 		},
 		{
 			name:   "invalid route",
-			before: func(mux *http.ServeMux) {},
-			after: func(route *strava.Route, err error) {
+			before: func(_ *http.ServeMux) {},
+			after: func(_ *strava.Route, err error) {
 				a.Error(err)
 			},
 		},

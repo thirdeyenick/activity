@@ -25,7 +25,7 @@ func TestActivity(t *testing.T) {
 	a := assert.New(t)
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/profiles/1037/activities/882920", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/profiles/1037/activities/882920", func(w http.ResponseWriter, _ *http.Request) {
 		enc := json.NewEncoder(w)
 		a.NoError(enc.Encode(&zwift.Activity{ID: 882920}))
 	})
@@ -72,7 +72,7 @@ func TestActivities(t *testing.T) {
 	a := assert.New(t)
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/profiles/1037/activities/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/profiles/1037/activities/", func(w http.ResponseWriter, _ *http.Request) {
 		enc := json.NewEncoder(w)
 		var res []*zwift.Activity
 		for i := 0; i < 5; i++ {

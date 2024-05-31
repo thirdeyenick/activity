@@ -41,7 +41,7 @@ func TestTokenRefresh(t *testing.T) {
 	a := assert.New(t)
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/token", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/token", func(w http.ResponseWriter, _ *http.Request) {
 		n, err := w.Write([]byte(`{
 				"access_token":"11223344556677889900",
 				"token_type":"bearer",
@@ -52,7 +52,7 @@ func TestTokenRefresh(t *testing.T) {
 		a.Greater(n, 0)
 		a.NoError(err)
 	})
-	mux.HandleFunc("/api/profiles/abcxyz", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/profiles/abcxyz", func(w http.ResponseWriter, _ *http.Request) {
 		enc := json.NewEncoder(w)
 		a.NoError(enc.Encode(&zwift.Profile{FirstName: "barney"}))
 	})
@@ -74,7 +74,7 @@ func TestTokenRefresh(t *testing.T) {
 	}
 	for _, tt := range tests {
 		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(tt.name, func(_ *testing.T) {
 			svr := httptest.NewServer(mux)
 			defer svr.Close()
 

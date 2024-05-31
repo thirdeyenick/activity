@@ -35,7 +35,7 @@ func TestAthlete(t *testing.T) {
 		{
 			name: "athlete not authorized",
 			before: func(mux *http.ServeMux) {
-				mux.HandleFunc("/users/current.json", func(w http.ResponseWriter, r *http.Request) {
+				mux.HandleFunc("/users/current.json", func(w http.ResponseWriter, _ *http.Request) {
 					w.WriteHeader(http.StatusUnauthorized)
 				})
 			},
