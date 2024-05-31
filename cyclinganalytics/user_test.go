@@ -27,7 +27,7 @@ func TestUser(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			a := assert.New(t)
 			mux := http.NewServeMux()
-			mux.HandleFunc("/me", func(w http.ResponseWriter, r *http.Request) {
+			mux.HandleFunc("/me", func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(http.StatusOK)
 				enc := json.NewEncoder(w)
 				a.NoError(enc.Encode(&cyclinganalytics.User{

@@ -51,11 +51,11 @@ func TestUpload(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			a := assert.New(t)
 			mux := http.NewServeMux()
-			mux.HandleFunc("/me/upload", func(w http.ResponseWriter, r *http.Request) {
+			mux.HandleFunc("/me/upload", func(w http.ResponseWriter, _ *http.Request) {
 				enc := json.NewEncoder(w)
 				a.NoError(enc.Encode(&cyclinganalytics.Upload{}))
 			})
-			mux.HandleFunc("/user/2298801/upload", func(w http.ResponseWriter, r *http.Request) {
+			mux.HandleFunc("/user/2298801/upload", func(w http.ResponseWriter, _ *http.Request) {
 				enc := json.NewEncoder(w)
 				a.NoError(enc.Encode(&cyclinganalytics.Upload{}))
 			})
@@ -110,11 +110,11 @@ func TestStatus(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			a := assert.New(t)
 			mux := http.NewServeMux()
-			mux.HandleFunc("/me/upload/1891982", func(w http.ResponseWriter, r *http.Request) {
+			mux.HandleFunc("/me/upload/1891982", func(w http.ResponseWriter, _ *http.Request) {
 				enc := json.NewEncoder(w)
 				a.NoError(enc.Encode(&cyclinganalytics.Upload{}))
 			})
-			mux.HandleFunc("/user/882722/upload/1891982", func(w http.ResponseWriter, r *http.Request) {
+			mux.HandleFunc("/user/882722/upload/1891982", func(w http.ResponseWriter, _ *http.Request) {
 				enc := json.NewEncoder(w)
 				a.NoError(enc.Encode(&cyclinganalytics.Upload{}))
 			})

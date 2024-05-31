@@ -16,11 +16,11 @@ func TestProfile(t *testing.T) {
 	a := assert.New(t)
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/profiles/abcxyz", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/profiles/abcxyz", func(w http.ResponseWriter, _ *http.Request) {
 		enc := json.NewEncoder(w)
 		a.NoError(enc.Encode(&zwift.Profile{FirstName: "barney"}))
 	})
-	mux.HandleFunc("/api/profiles/me", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/profiles/me", func(w http.ResponseWriter, _ *http.Request) {
 		enc := json.NewEncoder(w)
 		a.NoError(enc.Encode(&zwift.Profile{FirstName: "betty"}))
 	})

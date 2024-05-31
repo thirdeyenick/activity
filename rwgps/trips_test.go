@@ -40,7 +40,7 @@ func TestTrip(t *testing.T) {
 		{
 			name: "invalid trip",
 			before: func(mux *http.ServeMux) {
-				mux.HandleFunc("/trips/94.json", func(w http.ResponseWriter, r *http.Request) {
+				mux.HandleFunc("/trips/94.json", func(w http.ResponseWriter, _ *http.Request) {
 					w.WriteHeader(http.StatusNotFound)
 				})
 			},
@@ -114,7 +114,7 @@ func TestPagination(t *testing.T) {
 			name:   "valid routes",
 			routes: true,
 			before: func(mux *http.ServeMux) {
-				mux.HandleFunc("/users/88272/routes.json", func(w http.ResponseWriter, r *http.Request) {
+				mux.HandleFunc("/users/88272/routes.json", func(w http.ResponseWriter, _ *http.Request) {
 					enc := json.NewEncoder(w)
 					a.NoError(enc.Encode(struct {
 						Results []*rwgps.Trip `json:"results"`
@@ -136,7 +136,7 @@ func TestPagination(t *testing.T) {
 			name:  "valid trips",
 			trips: true,
 			before: func(mux *http.ServeMux) {
-				mux.HandleFunc("/users/88272/trips.json", func(w http.ResponseWriter, r *http.Request) {
+				mux.HandleFunc("/users/88272/trips.json", func(w http.ResponseWriter, _ *http.Request) {
 					enc := json.NewEncoder(w)
 					a.NoError(enc.Encode(struct {
 						Results []*rwgps.Trip `json:"results"`
