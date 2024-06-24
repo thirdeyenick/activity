@@ -41,6 +41,7 @@ type Client struct {
 	Auth     *AuthService
 	Activity *ActivityService
 	Profile  *ProfileService
+	Feed     *FeedService
 }
 
 func (c *Client) Exporter() activity.Exporter {
@@ -52,6 +53,7 @@ func withServices() Option {
 		c.Auth = &AuthService{c}
 		c.Profile = &ProfileService{c}
 		c.Activity = &ActivityService{c}
+		c.Feed = &FeedService{c}
 		c.token.TokenType = "bearer"
 		if c.baseURL == "" {
 			c.baseURL = _baseURL
