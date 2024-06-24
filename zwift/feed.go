@@ -13,6 +13,7 @@ const (
 
 	favoritesFeedType feedType = "FAVORITES"
 	followeesFeedType feedType = "FOLLOWEES"
+	justMeFeedType    feedType = "JUST_ME"
 )
 
 type feedType string
@@ -56,34 +57,44 @@ func (p *feedPaginator) Do(ctx context.Context, spec activity.Pagination) (int, 
 	return len(acts), nil
 }
 
+func (s *FeedService) feed(
+	ctx context.Context, paginator *feedPaginator, spec activity.Pagination) ([]*Activity, error) {
+	err := activity.Paginate(ctx, paginator, spec)
+	if err != nil {
+		return nil, err
+	}
+	return paginator.activities, nil
+}
+
+// JustMe returns all activities of the "just me" feed
+func (s *FeedService) JustMe(
+	ctx context.Context, includeInProgress bool, spec activity.Pagination) ([]*Activity, error) {
+	return s.feed(ctx, &feedPaginator{
+		service:           *s,
+		includeInProgress: includeInProgress,
+		feedType:          justMeFeedType,
+		activities:        make([]*Activity, 0),
+	}, spec)
+}
+
 // Favorites returns the feed for all riders marked as 'favorite'
 func (s *FeedService) Favorites(
 	ctx context.Context, includeInProgress bool, spec activity.Pagination) ([]*Activity, error) {
-	p := &feedPaginator{
+	return s.feed(ctx, &feedPaginator{
 		service:           *s,
 		includeInProgress: includeInProgress,
 		feedType:          favoritesFeedType,
 		activities:        make([]*Activity, 0),
-	}
-	err := activity.Paginate(ctx, p, spec)
-	if err != nil {
-		return nil, err
-	}
-	return p.activities, nil
+	}, spec)
 }
 
 // Followees returns the feed for all riders which the logged in user follows
 func (s *FeedService) Followees(
 	ctx context.Context, includeInProgress bool, spec activity.Pagination) ([]*Activity, error) {
-	p := &feedPaginator{
+	return s.feed(ctx, &feedPaginator{
 		service:           *s,
 		includeInProgress: includeInProgress,
 		feedType:          followeesFeedType,
 		activities:        make([]*Activity, 0),
-	}
-	err := activity.Paginate(ctx, p, spec)
-	if err != nil {
-		return nil, err
-	}
-	return p.activities, nil
+	}, spec)
 }
