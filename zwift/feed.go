@@ -12,6 +12,7 @@ const (
 	feedPageCount = 30
 
 	favoritesFeedType feedType = "FAVORITES"
+	followeesFeedType feedType = "FOLLOWEES"
 )
 
 type feedType string
@@ -62,6 +63,22 @@ func (s *FeedService) Favorites(
 		service:           *s,
 		includeInProgress: includeInProgress,
 		feedType:          favoritesFeedType,
+		activities:        make([]*Activity, 0),
+	}
+	err := activity.Paginate(ctx, p, spec)
+	if err != nil {
+		return nil, err
+	}
+	return p.activities, nil
+}
+
+// Followees returns the feed for all riders which the logged in user follows
+func (s *FeedService) Followees(
+	ctx context.Context, includeInProgress bool, spec activity.Pagination) ([]*Activity, error) {
+	p := &feedPaginator{
+		service:           *s,
+		includeInProgress: includeInProgress,
+		feedType:          followeesFeedType,
 		activities:        make([]*Activity, 0),
 	}
 	err := activity.Paginate(ctx, p, spec)
