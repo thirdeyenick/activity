@@ -91,7 +91,11 @@ func (s *ActivityService) Export(ctx context.Context, activityID int64) (*activi
 	if err != nil {
 		return nil, err
 	}
-	act, err := s.Activity(ctx, ath.ID, activityID)
+	id, err := ath.ID.Int64()
+	if err != nil {
+		return nil, err
+	}
+	act, err := s.Activity(ctx, id, activityID)
 	if err != nil {
 		return nil, err
 	}

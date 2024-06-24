@@ -1,6 +1,7 @@
 package zwift
 
 import (
+	"encoding/json"
 	"time"
 )
 
@@ -56,7 +57,7 @@ type SocialFacts struct {
 }
 
 type Profile struct {
-	ID                           int64        `json:"id"`
+	ID                           json.Number  `json:"id"`
 	PublicID                     string       `json:"publicId"`
 	FirstName                    string       `json:"firstName"`
 	LastName                     string       `json:"lastName"`
